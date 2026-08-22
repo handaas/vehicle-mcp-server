@@ -1,44 +1,46 @@
 # 车辆：品牌汽车区域销量情况
 
-[该 MCP 服务围绕品牌汽车区域销量情况，提供汽车品牌发现、品牌详情、区域经营布局、车型与车款销量以及经销商查询能力。](https://www.handaas.com/)
+[该MCP服务提供汽车品牌搜索、品牌详情、区域门店与销量、在售车型、车型销量、车款配置和经销商查询功能。](https://www.handaas.com/)
 
-> 所属板块：市场贸易
 
 ## 主要功能
 
-- 汽车品牌多条件检索
-- 品牌与制造商详情
-- 品牌区域门店经营布局
-- 在售车型和车型销量分析
-- 车款配置与经销商
-
-## 服务设计说明
-
-- 服务以品牌汽车在不同区域的销量和渠道布局分析为核心，品牌、车型、车款和经销商信息用于补充销量研判上下文。
-- 服务提供 7 个只读 Tool，单次 Tool 调用只访问一个 Product ID。
-- 翻页结果统一收口为 `total` 与 `resultList`。
-- 成功响应自动兼容 Gateway业务 data和内部 `stat/data` 两种形态。
-- 请求超时可通过 `HANDAAS_REQUEST_TIMEOUT` 配置，默认30秒。
+- 🚘 汽车品牌及厂商搜索
+- 📊 品牌区域门店和月销量分析
+- 🚗 品牌在售车型查询
+- 📈 车型最近12个月销量与排名
+- 🧾 车款配置和上月销量查询
+- 🏪 品牌区域经销商查询
 
 ## 环境要求
 
 - Python 3.10+
-- 依赖：`mcp`、`python-dotenv`、`requests`
+- 依赖包：python-dotenv, requests, mcp
 
 ## 本地快速启动
 
+### 1. 克隆项目
 ```bash
+git clone https://github.com/handaas/vehicle-mcp-server
 cd vehicle-mcp-server
-python3 -m venv mcp_env
-source mcp_env/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-python server/mcp_server.py streamable-http
 ```
 
-服务默认地址：`http://127.0.0.1:8000/mcp`。支持 `stdio`、`sse` 和 `streamable-http`。
+### 2. 创建虚拟环境&安装依赖
 
-## 环境变量
+```bash
+python -m venv mcp_env && source mcp_env/bin/activate
+pip install -r requirements.txt
+```
+
+### 3. 环境配置
+
+复制环境变量模板并配置：
+
+```bash
+cp .env.example .env
+```
+
+编辑 `.env` 文件，配置以下环境变量：
 
 ```env
 INTEGRATOR_ID=your_integrator_id
@@ -47,9 +49,17 @@ SECRET_KEY=your_secret_key
 HANDAAS_REQUEST_TIMEOUT=30
 ```
 
-真实凭据只能保存在本地 `.env` 或部署密钥中。
+### 4. streamable-http启动服务
 
-## Cursor / Cherry Studio配置
+```bash
+python server/mcp_server.py streamable-http
+```
+
+服务将在 `http://localhost:8000` 启动，MCP 地址为 `http://127.0.0.1:8000/mcp`。
+
+#### 支持启动方式 stdio 或 sse 或 streamable-http
+
+### 5. Cursor / Cherry Studio MCP配置
 
 ```json
 {
@@ -62,140 +72,226 @@ HANDAAS_REQUEST_TIMEOUT=30
 }
 ```
 
-## 可用 Tool 与 Product ID
+## STDIO版安装部署
 
-| MCP Tool | 使用场景 | Product ID | 关键输入 |
-| --- | --- | --- | --- |
-| `vehicle_brand_search` | 发现汽车品牌并取得 `manufacturerId` | `6a7b19688c8d379dd486bcca` | 品牌、厂商、国别、销量、上市日期、分页 |
-| `vehicle_brand_detail` | 查询品牌厂商和历史销量概况 | `6a7b1f3fdfa4a2f37b1914a8` | `manufacturerId` |
-| `vehicle_brand_market_analysis` | 分析区域门店、月销量和商圈布局 | `6a7bd578dfa4a2f37b191623` | `manufacturerId`、`province` |
-| `vehicle_on_sale_model_list` | 查询品牌在售车型并取得 `carModelId` | `6a7bd6498c8d379dd486bfc7` | `manufacturerId`、分页 |
-| `vehicle_model_sales_ranking` | 查询车型最近 12 个月销量和品牌内排名 | `6a7bda718c8d379dd486c01a` | `manufacturerId`、`carModelId` |
-| `vehicle_car_trim_list` | 查询具体车款、配置和上月销量 | `6a7be332dfa4a2f37b19173c` | 品牌、日期、能源、车型、价格、分页 |
-| `vehicle_dealer_list` | 查询品牌区域经销商和商圈信息 | `6a7c26548c8d379dd486c364` | 品牌、地区、类型、营业额、商圈、分页 |
+### 设置Cursor / Cherry Studio MCP配置
 
-## 推荐调用流程
+```json
+{
+  "mcpServers": {
+    "vehicle-mcp-server": {
+      "command": "uv",
+      "args": ["run", "mcp", "run", "{workdir}/server/mcp_server.py"],
+      "env": {
+        "PATH": "{workdir}/mcp_env/bin:$PATH",
+        "PYTHONPATH": "{workdir}/mcp_env",
+        "INTEGRATOR_ID": "your_integrator_id",
+        "SECRET_ID": "your_secret_id",
+        "SECRET_KEY": "your_secret_key"
+      }
+    }
+  }
+}
+```
 
-1. 先用 `vehicle_brand_search` 确认品牌并取得 `manufacturerId`。
-2. 使用品牌 ID 查询品牌详情和区域销量布局。
-3. 需要车型分析时，先查在售车型取得 `carModelId`，再查询最近 12 个月销量。
-4. 使用品牌 ID 继续查询车款配置或指定区域经销商。
+## 使用官方Remote服务
 
-## Tool 详细说明
+当前服务暂未开放官方 Remote 地址。请使用本地 `stdio`、`sse` 或 `streamable-http` 方式运行；官方 Remote 地址开放后将在本节补充配置。
+
+### 注意：integrator_id、secret_id、secret_key及Remote token需要登录 https://www.handaas.com/ 进行注册开通平台获取
+
+
+## 可用工具
 
 ### 1. vehicle_brand_search
+**功能**: 汽车品牌搜索
 
-**何时使用**：用户只提供品牌名、厂商名、所属国或销量范围时，用于定位汽车品牌。
+**参数**:
+按品牌名称、厂商总公司、所属国、年销量和新款上市时间搜索汽车品牌。
 
-**关键参数**：`keyword` 为品牌模糊词；年销量筛选单位为万辆；上市日期格式为 `YYYY-MM-DD`；`pageSize` 最大 10。
+- `keyword` (可选): 品牌名称关键词
+- `manufacturerCompany` (可选): 品牌厂商总公司
+- `brandCountry` (可选): 品牌所属国
+- `annualSalesVolumeMin` / `annualSalesVolumeMax` (可选): 年销量区间，单位为万辆
+- `newModelLaunchTimeMin` / `newModelLaunchTimeMax` (可选): 新款上市日期区间，格式YYYY-MM-DD
+- `pageIndex` (可选): 页码，从1开始
+- `pageSize` (可选): 每页条数，最大10
 
-**返回说明**：返回品牌、厂商、所属国、价格区间、年销量和在售规模，并提供 `manufacturerId`。
+**返回值**:
+- `total`: 品牌总数
+- `resultList`: 品牌结果列表
+  - `manufacturerId`: 品牌厂商ID
+  - `manufacturerName`: 品牌厂商名称
+  - `manufacturerCompany`: 厂商总公司
+  - `brandCountry`: 品牌所属国
+  - `priceRange`: 价格区间
+  - `hotSellingCarModelName`: 热销车型
+  - `annualSalesVolume`: 年销量，单位为辆
+  - `onSaleCarModelNum`: 在售车型数量
+  - `onSaleCarTrimNum`: 在售车款数量
 
 ### 2. vehicle_brand_detail
+**功能**: 汽车品牌详情查询
 
-**何时使用**：需要品牌介绍、热销车型、历史销量、在售规模或门店概况时使用。
+**参数**:
+- `manufacturerId` (必需): 必须使用品牌搜索返回的品牌厂商ID
 
-**关键参数**：`manufacturerId` 必须来自品牌检索结果。
-
-**返回说明**：详情以 `total=1` 和单条 `resultList` 返回。
+**返回值**:
+- `total`: 命中数量
+- `resultList`: 品牌详情列表
+  - `manufacturerName`: 品牌厂商名称
+  - `manufacturerCompany`: 厂商总公司
+  - `manufacturerIntroduction`: 品牌厂商简介
+  - `hotSellingCarModelList`: 热销车型列表
+  - `nationalHistoricalSalesList`: 全国历史销量
+  - `annualSalesVolume`: 年销量
+  - `brandStoreNum`: 品牌门店数量
+  - `brandMonthSales`: 品牌月销量
+  - `all_car_model_dict`: 在售车型名称与ID映射
 
 ### 3. vehicle_brand_market_analysis
+**功能**: 品牌汽车区域销量与门店分布查询
 
-**何时使用**：比较品牌在不同省份或某省不同城市的门店与销量布局时使用。
+**参数**:
+- `manufacturerId` (必需): 品牌厂商ID
+- `province` (可选): 省份短名，例如广东；不传时按省份汇总，传入后按城市汇总
 
-**关键参数**：必填 `manufacturerId`；不传 `province` 时按省份汇总，传入“广东”等省份短名时按城市汇总。
-
-**返回说明**：返回 `storeLayout`，包括门店数量、月销量、占比、商圈数量和周边月均客流。
+**返回值**:
+- `total`: 命中数量
+- `resultList`: 市场分析结果
+  - `storeLayout`: 区域经营布局列表
+    - `storeLocation`: 省份或城市
+    - `storeNum`: 门店数量
+    - `monthlySalesVolume`: 月销量
+    - `percentage`: 销量占比
+    - `businessDistrictNum`: 入驻商圈数量
+    - `storeSurroundMonthlyTraffic`: 门店周边月均客流
 
 ### 4. vehicle_on_sale_model_list
+**功能**: 品牌在售车型查询
 
-**何时使用**：查看品牌当前在售车型、价格和车款数量，或为销量查询取得车型 ID 时使用。
+**参数**:
+- `manufacturerId` (必需): 品牌厂商ID
+- `pageIndex` (可选): 页码，从1开始
+- `pageSize` (可选): 每页条数，最大10
 
-**关键参数**：`manufacturerId` 来自品牌检索；支持分页。
-
-**返回说明**：返回车型名称、级别、价格和 `carModelId`。
+**返回值**:
+- `total`: 在售车型总数
+- `resultList`: 在售车型列表
+  - `carModelId`: 车型ID
+  - `carModelName`: 车型名称
+  - `level`: 车型级别
+  - `price`: 价格区间
+  - `carTrimNum`: 车款数量
 
 ### 5. vehicle_model_sales_ranking
+**功能**: 品牌内车型销量查询
 
-**何时使用**：查看某车型最近 12 个月销量和品牌内排名时使用。
+**参数**:
+- `manufacturerId` (必需): 品牌厂商ID
+- `carModelId` (可选): 在售车型返回的车型ID；不传时查询品牌销量最高车型
 
-**关键参数**：`manufacturerId` 必填；`carModelId` 来自在售车型结果，不传时查询该品牌销量最高的车型。
-
-**返回说明**：返回车型名称以及最近 12 个月的月份、销量和排名。
+**返回值**:
+- `total`: 命中数量
+- `resultList`: 车型销量详情
+  - `carModelName`: 车型名称
+  - `salesList`: 最近12个月销量
+    - `month`: 月份
+    - `rank`: 品牌内排名
+    - `reg_value`: 销量，单位为辆
 
 ### 6. vehicle_car_trim_list
+**功能**: 品牌车款明细查询
 
-**何时使用**：需要查询具体车款、能源类型、指导价、配置或上月销量时使用。
+**参数**:
+- `manufacturerId` (必需): 品牌厂商ID
+- `launchTimeMin` / `launchTimeMax` (可选): 上市日期区间
+- `powerEnergyType` (可选): 动力或能源类型
+- `carType` / `secondCarType` (可选): 一级或二级车型分类，两者互斥
+- `carPriceMin` / `carPriceMax` (可选): 价格区间，单位为元
+- `pageIndex` (可选): 页码
+- `pageSize` (可选): 每页条数，最大10
 
-**关键参数**：价格单位为元；`carType` 与 `secondCarType` 不能同时提供；日期格式为 `YYYY-MM-DD`；支持分页。
-
-**返回说明**：返回车型、车款、上市时间、能源类型、指导价、配置和上月销量。
+**返回值**:
+- `total`: 车款总数
+- `resultList`: 车款明细列表
+  - `carModelId`: 车型ID
+  - `carModelName`: 车型名称
+  - `carTrimName`: 车款名称
+  - `launchTime`: 上市时间
+  - `powerEnergyType`: 动力或能源类型
+  - `manufacturerGuidePrice`: 厂商指导价
+  - `carSpecs`: 配置参数
+  - `MonthSales`: 上月销量
 
 ### 7. vehicle_dealer_list
+**功能**: 汽车品牌区域经销商查询
 
-**何时使用**：需要查找某品牌在指定区域的经销商、运营主体和商圈信息时使用。
+**参数**:
+- `manufacturerId` (必需): 品牌厂商ID
+- `province` / `city` / `district` (可选): 省市区筛选
+- `dealerType` (可选): 经销类型
+- `annualTurnoverRange` (可选): 年营业额区间
+- `businessDistrictType` (可选): 商圈类型
+- `pageIndex` (可选): 页码
+- `pageSize` (可选): 每页条数，最大10
 
-**关键参数**：`manufacturerId` 必填；可按省、市、区县、经销类型、年营业额和商圈类型筛选。
-
-**返回说明**：返回门店名称、企业主体、地址、商圈、客流和周边房价等信息。
-
-## 使用示例
-
-### 示例一：品牌区域销量
-
-> 分析比亚迪在广东省各城市的门店数量、月销量和销量占比。
-
-先调用 `vehicle_brand_search(keyword="比亚迪")` 取得 `manufacturerId`，再调用：
-
-```json
-{
-  "tool": "vehicle_brand_market_analysis",
-  "arguments": {
-    "manufacturerId": "从品牌检索结果取得",
-    "province": "广东"
-  }
-}
-```
-
-### 示例二：车型销量趋势
-
-> 查看比亚迪某款在售车型最近 12 个月销量和品牌内排名。
-
-先查询品牌，再调用 `vehicle_on_sale_model_list` 取得 `carModelId`，最后调用：
-
-```json
-{
-  "tool": "vehicle_model_sales_ranking",
-  "arguments": {
-    "manufacturerId": "从品牌检索结果取得",
-    "carModelId": "从在售车型结果取得"
-  }
-}
-```
-
-### 示例三：区域经销商
-
-> 查找比亚迪在深圳的经销商和所在商圈。
-
-```json
-{
-  "tool": "vehicle_dealer_list",
-  "arguments": {
-    "manufacturerId": "从品牌检索结果取得",
-    "province": "广东省",
-    "city": "深圳市",
-    "pageIndex": 1,
-    "pageSize": 10
-  }
-}
-```
+**返回值**:
+- `total`: 经销商总数
+- `resultList`: 经销商列表
+  - `storeName`: 门店名称
+  - `EnterpriseEntity`: 企业主体
+  - `dealerType`: 经销类型
+  - `Revenue`: 年营业额
+  - `address`: 门店地址
+  - `businessDistrict`: 所属商圈
+  - `businessType`: 商圈类型
+  - `monthFootTraffic`: 商圈客流量
 
 ## 使用注意事项
 
-1. `manufacturerId` 来自汽车品牌检索结果。
-2. `carModelId` 来自在售车型结果，在 Product API wire 层映射为 `carId`。
-3. 一级车型 `carType` 与二级车型 `secondCarType` 不能同时提供。
-4. 年销量筛选单位为万辆，车款价格筛选单位为元，返回销量单位以字段说明为准。
+1. **品牌ID要求**: 后续查询必须先通过品牌搜索取得 `manufacturerId`。
+2. **车型ID要求**: `carModelId` 来自在售车型查询结果。
+3. **分页限制**: 车辆分页接口一页最多获取10条数据。
+4. **互斥参数**: `carType` 与 `secondCarType` 不能同时提供。
+5. **单位说明**: 品牌年销量筛选单位为万辆，车款价格筛选单位为元。
+
+## 使用提问示例
+
+### vehicle_brand_search (汽车品牌搜索)
+1. 帮我搜索比亚迪汽车品牌
+2. 查询年销量超过50万辆的汽车品牌
+3. 搜索所属国为德国的汽车品牌
+
+### vehicle_brand_detail (汽车品牌详情查询)
+1. 查询比亚迪的品牌介绍和在售规模
+2. 查看丰田的历史销量情况
+3. 获取该品牌的热销车型列表
+
+### vehicle_brand_market_analysis (品牌汽车区域销量与门店分布查询)
+1. 分析比亚迪在广东各城市的门店和月销量
+2. 查看丰田在全国各省的销售布局
+3. 比较该品牌各区域的销量占比
+
+### vehicle_on_sale_model_list (品牌在售车型查询)
+1. 比亚迪目前有哪些在售车型
+2. 查看丰田在售车型的价格区间
+3. 获取该品牌在售车型和车型ID
+
+### vehicle_model_sales_ranking (品牌内车型销量查询)
+1. 查看这款车型最近12个月销量
+2. 查询该车型在品牌内的销量排名
+3. 不指定车型时查看品牌最畅销车型
+
+### vehicle_car_trim_list (品牌车款明细查询)
+1. 查询比亚迪在售车款和配置
+2. 查看指导价20万到30万元的车款
+3. 查询最近一年上市的车款及上月销量
+
+### vehicle_dealer_list (汽车品牌区域经销商查询)
+1. 查询比亚迪在深圳的经销商
+2. 查看该品牌在广东的门店分布
+3. 查询指定商圈类型内的品牌经销商
 
 ## 测试验证
 
@@ -204,4 +300,4 @@ python -m py_compile server/mcp_server.py
 python -m unittest discover -s tests -v
 ```
 
-单元测试使用 Mock 响应；真实验证通过本地 `.env` 调用 HandaaS Integrator Gateway。
+当前服务包含 9 个离线单元测试。真实接口验证需在本地 `.env` 配置有效凭据后执行，测试输出不得提交真实业务响应或凭据。
