@@ -41,7 +41,7 @@ class ContractTests(TestCase):
     def test_invalid_pagination_is_actionable(self) -> None:
         error = server._pagination_error(0, 10)
         self.assertEqual(error["parameter"], "pageIndex")
-        error = server._pagination_error(1, 51)
+        error = server._pagination_error(1, 11)
         self.assertEqual(error["parameter"], "pageSize")
 
     def test_empty_business_response_is_normalized(self) -> None:

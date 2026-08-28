@@ -123,7 +123,7 @@ def _unwrap_backend_data(result: Any) -> Any:
     return result.get("data")
 
 
-def _pagination_error(page_index: int, page_size: int, maximum: int = 50) -> dict[str, Any] | None:
+def _pagination_error(page_index: int, page_size: int, maximum: int = 10) -> dict[str, Any] | None:
     if page_index < 1:
         return {"error": "pageIndex 必须大于等于 1", "parameter": "pageIndex"}
     if page_size < 1 or page_size > maximum:

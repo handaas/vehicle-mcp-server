@@ -115,7 +115,7 @@ python server/mcp_server.py streamable-http
 - `annualSalesVolumeMin` / `annualSalesVolumeMax` (可选): 年销量区间，单位为万辆
 - `newModelLaunchTimeMin` / `newModelLaunchTimeMax` (可选): 新款上市日期区间，格式YYYY-MM-DD
 - `pageIndex` (可选): 页码，从1开始
-- `pageSize` (可选): 每页条数，最大10
+- `pageSize` (可选): 每页条数，默认10，最大10
 
 **返回值**:
 - `total`: 品牌总数
@@ -173,7 +173,7 @@ python server/mcp_server.py streamable-http
 **参数**:
 - `manufacturerId` (必需): 品牌厂商ID
 - `pageIndex` (可选): 页码，从1开始
-- `pageSize` (可选): 每页条数，最大10
+- `pageSize` (可选): 每页条数，默认10，最大10
 
 **返回值**:
 - `total`: 在售车型总数
@@ -210,7 +210,7 @@ python server/mcp_server.py streamable-http
 - `carType` / `secondCarType` (可选): 一级或二级车型分类，两者互斥
 - `carPriceMin` / `carPriceMax` (可选): 价格区间，单位为元
 - `pageIndex` (可选): 页码
-- `pageSize` (可选): 每页条数，最大10
+- `pageSize` (可选): 每页条数，默认10，最大10
 
 **返回值**:
 - `total`: 车款总数
@@ -234,7 +234,7 @@ python server/mcp_server.py streamable-http
 - `annualTurnoverRange` (可选): 年营业额区间
 - `businessDistrictType` (可选): 商圈类型
 - `pageIndex` (可选): 页码
-- `pageSize` (可选): 每页条数，最大10
+- `pageSize` (可选): 每页条数，默认10，最大10
 
 **返回值**:
 - `total`: 经销商总数
