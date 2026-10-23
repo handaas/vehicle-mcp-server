@@ -16,7 +16,7 @@ SPEC.loader.exec_module(server)
 class ContractTests(TestCase):
     def test_registered_tools_and_annotations(self) -> None:
         tools = asyncio.run(server.mcp.list_tools())
-        self.assertEqual(server.mcp.name, '车辆：品牌汽车区域销量情况')
+        self.assertEqual(server.mcp.name, '品牌汽车区域销量情况')
         self.assertEqual({tool.name for tool in tools}, {'vehicle_model_sales_ranking', 'vehicle_dealer_list', 'vehicle_car_trim_list', 'vehicle_brand_search', 'vehicle_brand_detail', 'vehicle_brand_market_analysis', 'vehicle_on_sale_model_list'})
         for tool in tools:
             self.assertEqual(tool.outputSchema.get("type"), "object")

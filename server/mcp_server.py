@@ -17,7 +17,7 @@ from mcp.types import ToolAnnotations
 load_dotenv()
 
 mcp = FastMCP(
-    "车辆：品牌汽车区域销量情况",
+    "品牌汽车区域销量情况",
     instructions='先检索汽车品牌取得 manufacturerId，再查询品牌详情、区域销量与门店布局、在售车型、车型销量、车款和经销商。',
     dependencies=["python-dotenv", "requests"],
 )
